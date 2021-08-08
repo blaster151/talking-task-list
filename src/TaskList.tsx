@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import logo from './logo.svg';
-import { tasks } from './tasks.js';
+import { ITask } from './models';
+import { tasks } from './tasks';
 
 function say(text: string) {
   var msg = new SpeechSynthesisUtterance();
@@ -17,10 +18,9 @@ function say(text: string) {
   console.log('speak method called');
 }
 
-
 function TaskList() {
   const [isStarted, setIsStarted] = useState(false);
-  const [tasksSoFar, setTasksSoFar] = useState<{ 'Task Name': string, 'Time': number }[]>([]);
+  const [tasksSoFar, setTasksSoFar] = useState<ITask[]>([]);
   const [currentTaskIndex, setCurrentTaskIndex] = useState(-1);
   const [isFinished, setIsFinished] = useState(false);
 
@@ -29,31 +29,11 @@ function TaskList() {
   };
 
   useEffect(() => {
-    let timeElapsed = 0;
-
     if (!isStarted)
       return;
 
     if (currentTaskIndex < 0)
       setCurrentTaskIndex(0);
-
-    // for (let t of tasks) {
-    //   let taskName = t['Task Name'];
-    //   let taskTime = t.Time;
-
-    //   console.log('Scheduling ', taskName, timeElapsed);
-    //   const timeout = setTimeout(() => {
-    //     console.log('tasksSoFar: ', tasksSoFar);
-        
-    //     const updatedTasksSoFar = [...tasksSoFar];
-    //     updatedTasksSoFar.push(t);
-    //     setTasksSoFar(updatedTasksSoFar);
-
-    //     say(taskName);
-    //   }, timeElapsed);
-
-    //   timeElapsed += 60 * taskTime * 1000;
-    // };
   }, [isStarted, currentTaskIndex]);
 
   useEffect(() => {
@@ -61,12 +41,14 @@ function TaskList() {
       return;
 
     console.log('currentTaskIndex', currentTaskIndex);
+    currentTaskIndex > 0 && (tasks[currentTaskIndex - 1].isCurrent = false);
+    tasks[currentTaskIndex].isCurrent = true;
 
     const updated = [...tasksSoFar];
     updated.push(tasks[currentTaskIndex]);
     setTasksSoFar(updated)
 
-    say(tasks[currentTaskIndex]['Task Name']);
+    say(tasks[currentTaskIndex]['taskName']);
 
     console.log('setting timeout', JSON.stringify(tasks[currentTaskIndex]));
     setTimeout(() => {
@@ -79,7 +61,7 @@ function TaskList() {
         setIsFinished(true);
       }
       
-    }, tasks[currentTaskIndex].Time * 1000 * 60);
+    }, tasks[currentTaskIndex].time * 1000 * 60);
   }, [currentTaskIndex]);
 
   useEffect(() => {
@@ -89,13 +71,13 @@ function TaskList() {
   return (
     <>
       <div className="TaskList">
-        {tasks.map((t,i) => <div key={i}>{t['Task Name']}</div>)}
+        {tasks.map((t,i) => <div key={i}>{t.taskName}</div>)}
       </div>
 
       <button onClick={() => startItAll()}>Start</button>
 
       <div>Tasks So Far</div>
-      {tasksSoFar.map((t,i) => <div key={i}>{t['Task Name']}</div>)}
+      {tasksSoFar.map((t,i) => <div key={i}>{t.taskName}</div>)}
 
       {isFinished && <div>DONE WITH LIST</div>}
     </>
